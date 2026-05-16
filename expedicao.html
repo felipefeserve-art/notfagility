@@ -1,0 +1,207 @@
+<h1> EXPEDIÇÃO</h1>
+
+<h2>🚨 Pendentes / Em andamento</h2>
+<div id="ativos"></div>
+
+<h2>✅ Finalizados</h2>
+<div id="finalizados"></div>
+
+<audio id="som" loop>
+  <source src="son2.mp3">
+</audio>
+
+<style>
+
+body{
+
+  background:#d6d8da;
+  font-family:arial,sans-serif;
+  
+  
+
+  background-image: url("expedi.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+
+  justify-content:center;
+  align-items:center;
+}
+
+h1 {
+  font-family:Lucida;
+  text-align: center;
+  font-size: 45px;
+}
+
+ h2{
+ text-align: center;
+ font-size: 25px;
+
+ }
+.pendente {
+  background: red;
+  color: white;
+  animation: piscar 1s infinite;
+  padding: 50px;
+  border: 5px solid yellow;
+  font-size: 40px;
+  font-weight: bold;
+  box-shadow: 0 0 30px red;
+}
+
+.acaminho {
+  background: orange;
+  color: black;
+  padding: 40px;
+}
+
+.finalizado {
+  background: #d4edda;
+  padding: 20px;
+  width:50%;
+  justify-content:center;
+}
+
+.card {
+  
+  border-radius: 10px;
+  font-size: 25px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  justify-content:center;
+  margin:auto;
+  margin-top:10px;
+  
+  
+}
+
+@keyframes piscar {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+async function validar(){
+
+  const token = localStorage.getItem("token");
+
+  if(!token){
+    location.href = "/";
+    return;
+  }
+
+  try{
+
+    const resposta = await fetch("/validar-token",{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    });
+
+    if(!resposta.ok){
+
+      alert("Sessão expirada");
+
+      localStorage.removeItem("token");
+
+      location.href = "/";
+
+    }
+
+  }catch{
+
+    location.href = "/";
+
+  }
+
+}
+
+validar();
+
+</script>
+
+<script>
+const socket = io();
+
+socket.on("listaAlertas", (alertas) => {
+  const ativos = document.getElementById("ativos");
+  const finalizados = document.getElementById("finalizados");
+
+  ativos.innerHTML = "";
+  finalizados.innerHTML = "";
+
+
+  let temPendente = false;
+
+  alertas.forEach(a => {
+    const div = document.createElement("div");
+    div.classList.add("card");
+
+    if (a.status === "PENDENTE") {
+      div.classList.add("pendente");
+      temPendente = true;
+    } 
+    else if (a.status === "ACAMINHO") {
+      div.classList.add("acaminho");
+    } 
+    else {
+      div.classList.add("finalizado");
+    }
+
+    div.innerHTML = `
+      <b>Linha:</b> ${a.linha} <br>
+      <b>Status:</b> ${a.status} <br>
+      <b>Hora:</b> ${a.hora} <br>
+
+      ${a.status === "PENDENTE" ? 
+        `<button onclick="coletar(${a.id})">Confirmar Coleta</button>` : ""}
+    `;
+
+    if (a.status === "FINALIZADO") {
+
+  // adiciona no topo (mais recente primeiro)
+ 
+  finalizados.prepend(div);
+
+  // limita a 5 itens
+  if (finalizados.children.length > 5) {
+    finalizados.removeChild(finalizados.lastChild);
+  }
+
+} else {
+
+  // pendentes sempre no topo
+  if (a.status === "PENDENTE") {
+    ativos.prepend(div);
+  } else {
+    ativos.appendChild(div);
+  }
+
+}
+
+
+  });
+
+  // 🔊 Som contínuo enquanto houver pendente
+  const som = document.getElementById("som");
+
+  if (temPendente) {
+    som.play().catch(() => {});
+  } else {
+    som.pause();
+    som.currentTime = 0;
+  }
+});
+
+function coletar(id) {
+  socket.emit("coletar", id);
+}
+</script>
+

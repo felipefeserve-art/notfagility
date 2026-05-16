@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Renovar Licença</title>
+
+<style>
+
+body{
+  font-family:Arial;
+  background:#111827;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box{
+  background:#1f2937;
+  padding:30px;
+  width:320px;
+  border-radius:10px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:15px;
+  background:#16a34a;
+  color:white;
+  border:none;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="box">
+
+<h2>Licença Expirada</h2>
+
+<p>Digite a nova licença:</p>
+
+<input id="licenca">
+
+<button onclick="renovar()">
+Renovar
+</button>
+
+</div>
+
+<script>
+
+async function renovar(){
+
+  const usuario =
+    localStorage.getItem("usuarioRenovar");
+
+  const chave =
+    document.getElementById("licenca").value;
+
+  const resposta = await fetch("/renovar",{
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({
+      usuario,
+      chave
+    })
+
+  });
+
+  const dados = await resposta.json();
+
+  if(!resposta.ok){
+
+    alert(dados.erro);
+
+    return;
+
+  }
+
+  alert("Licença renovada");
+
+  location.href = "/";
+
+}
+
+</script>
+
+</body>
+</html>

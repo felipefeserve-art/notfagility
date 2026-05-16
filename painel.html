@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Painel</title>
+
+<style>
+
+body{
+  font-family:Arial;
+  text-align:center;
+  background:#111827;
+  color:white;
+  padding-top:100px;
+}
+
+a{
+  display:block;
+  margin:20px auto;
+  width:250px;
+  padding:15px;
+  background:#2563eb;
+  color:white;
+  text-decoration:none;
+  border-radius:10px;
+}
+
+button{
+  margin-top:30px;
+  padding:10px 20px;
+}
+
+</style>
+
+</head>
+<body>
+
+<h1>Painel Principal</h1>
+
+<a href="/producao.html">Produção</a>
+<a href="/expedicao.html">Expedição</a>
+
+<button onclick="sair()">Sair</button>
+
+<script>
+
+async function validar(){
+
+  const token = localStorage.getItem("token");
+
+  if(!token){
+    location.href = "/";
+    return;
+  }
+
+  try{
+
+    const resposta = await fetch("/validar-token",{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    });
+
+    if(!resposta.ok){
+
+      alert("Sessão expirada");
+
+      localStorage.removeItem("token");
+
+      location.href = "/";
+
+    }
+
+  }catch{
+
+    location.href = "/";
+
+  }
+
+}
+
+function sair(){
+
+  localStorage.removeItem("token");
+
+  location.href = "/";
+
+}
+
+validar();
+
+</script>
+
+</body>
+</html>

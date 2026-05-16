@@ -1,0 +1,210 @@
+<h1>Produção</h1>
+
+<div class="topo">
+  <input id="linha" placeholder="Ex: Linha 1">
+  <select id="linha"placeholder="Solicitção">
+  <option value="linha">Recolher</option>
+  <option value="linha">Abastecer</option>
+
+</select> 
+  <button onclick="enviar()">🚨 Notificar</button>
+</div>
+
+<h2>Alertas</h2>
+
+<div id="lista"></div>
+
+<style>
+body{
+  font-family: Arial;
+  background:#7d99ac;
+  
+}
+
+img{
+  padding:10px 15px;
+}
+
+h1,h2{
+  text-align:center;
+  
+}
+
+.topo{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+input{
+  padding:10px;
+  width:220px;
+  font-size:16px;
+}
+
+button{
+  padding:10px 15px;
+  cursor:pointer;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  background:#0c709e;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+#lista{
+  max-width:600px;
+  margin:auto;
+}
+
+.alerta{
+  background:white;
+  border-left:8px solid red;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:8px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.finalizado{
+  border-left-color:green;
+  opacity:0.7;
+}
+
+.status{
+  font-weight:bold;
+  margin-top:5px;
+}
+
+.btn-finalizar{
+  background:green;
+  color:white;
+  margin-top:10px;
+}
+
+.btn-alerta{
+  background:red;
+  color:white;
+}
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+async function validar(){
+
+  const token = localStorage.getItem("token");
+
+  if(!token){
+    location.href = "/";
+    return;
+  }
+
+  try{
+
+    const resposta = await fetch("/validar-token",{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    });
+
+    if(!resposta.ok){
+
+      alert("Sessão expirada");
+
+      localStorage.removeItem("token");
+
+      location.href = "/";
+
+    }
+
+  }catch{
+
+    location.href = "/";
+
+  }
+
+}
+
+validar();
+
+</script>
+
+
+<script>
+
+
+
+const socket = io();
+
+function enviar() {
+
+  const input = document.getElementById("linha");
+  const linha = input.value.trim();
+
+  if (!linha){
+    alert("Informe a linha!");
+    return;
+  }
+
+  socket.emit("novoAlerta", { linha });
+
+
+  input.value = "";
+
+  
+  input.focus();
+
+}
+
+socket.on("listaAlertas", (alertas) => {
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  // últimos 10
+  const ultimos = alertas.slice(-10).reverse();
+
+  ultimos.forEach(a => {
+
+    const div = document.createElement("div");
+
+    div.className = `
+      alerta
+      ${a.status === "FINALIZADO" ? "finalizado" : ""}
+    `;
+
+    div.innerHTML = `
+      <div><b> ${a.linha}</b></div>
+
+      <div class="status">
+        Status: ${a.status}</div>
+      
+      <div><b>Hora: ${a.hora}</b> <br></div>  
+
+      ${
+        a.status === "ACAMINHO"
+        ?
+        `<button class="btn-finalizar"
+          onclick="finalizar(${a.id})">
+          ✅ Finalizar
+        </button>`
+        :
+        ""
+      }
+    `;
+
+    lista.appendChild(div);
+  });
+});
+
+function finalizar(id){
+  socket.emit("finalizar", id);
+}
+</script>
+

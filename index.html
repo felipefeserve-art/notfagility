@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<style>
+
+body{
+  font-family:sans-serif;
+  background:#1a283d;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  text-align:center;
+
+  justify-content:flex-start;
+  padding-left:180px;
+  
+  
+  background-image: url("backlog.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.box{
+  background:white;
+  padding:30px;
+  width:300px;
+  border-radius:10px;
+  padding-left:9px;
+  margin-right:80px;
+  font-family:sans-serif;
+  
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+}
+
+button{
+  width:107%;
+  padding:10px;
+  margin-top:10px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+
+
+</style>
+
+</head>
+<body>
+
+<div class="box">
+
+<h2>LOGIN</h2>
+
+<input id="usuario" placeholder="Usuário">
+
+<input id="senha" type="password" placeholder="Senha">
+
+<button onclick="logar()">
+Entrar
+</button>
+
+
+</div>
+
+<script>
+
+async function logar(){
+
+  const usuario =
+    document.getElementById("usuario").value;
+
+  const senha =
+    document.getElementById("senha").value;
+
+  const resposta = await fetch("/login",{
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({
+      usuario,
+      senha
+    })
+
+  });
+
+  const dados = await resposta.json();
+
+  // licença vencida
+
+  if(dados.licenca === false){
+
+    localStorage.setItem(
+      "usuarioRenovar",
+      usuario
+    );
+
+    location.href = "/renovar.html";
+
+    return;
+
+  }
+
+  if(!resposta.ok){
+
+    alert(dados.erro);
+
+    return;
+
+  }
+
+  localStorage.setItem(
+    "token",
+    dados.token
+  );
+
+  location.href = "/painel.html";
+
+}
+
+</script>
+
+</body>
+</html>
